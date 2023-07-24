@@ -1,0 +1,38 @@
+{
+    "name": "carbon-retirement-celo",
+    "version": "1.0.0",
+    "description": "Custom Celo Composer project.",
+    "private": true,
+    "author": "Celo",
+    "license": "MIT",
+    "scripts": {
+        "react-app:dev": "yarn workspace @carbon-retirement-celo/react-app dev",
+        "react-app:build": "yarn workspace @carbon-retirement-celo/react-app build",
+        "react-app:start": "yarn workspace @carbon-retirement-celo/react-app start",
+        "react-app:lint": "yarn workspace @carbon-retirement-celo/react-app lint",
+        "hardhat:test": "yarn workspace @carbon-retirement-celo/hardhat test",
+        "hardhat:test-local": "yarn workspace @carbon-retirement-celo/hardhat test-local",
+        "hardhat:create-account": "yarn workspace @carbon-retirement-celo/hardhat create-account",
+        "hardhat:accounts": "yarn workspace @carbon-retirement-celo/hardhat accounts",
+        "hardhat:devchain": "yarn workspace @carbon-retirement-celo/hardhat devchain",
+        "hardhat:deploy": "yarn workspace @carbon-retirement-celo/hardhat deploy",
+        "hardhat:deploy-reset-watch": "yarn workspace @carbon-retirement-celo/hardhat deploy-reset-watch",
+        "hardhat:watch": "yarn workspace @carbon-retirement-celo/hardhat watch",
+        "hardhat:fork-mainnet": "yarn workspace @carbon-retirement-celo/hardhat fork-mainnet"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/celo-org/celo-composer.git"
+    },
+    "bugs": {
+        "url": "https://github.com/celo-org/celo-composer/issues"
+    },
+    "homepage": "https://github.com/celo-org/celo-composer/blob/main/README.md",
+    "workspaces": [
+        "packages/*"
+    ],
+    "keywords": [
+        "celo-composer",
+        "celo"
+    ]
+}
