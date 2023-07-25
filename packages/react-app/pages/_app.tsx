@@ -19,11 +19,11 @@ const connectors = celoGroups({
     chains,
     projectId,
     appName:
-        (typeof document === "object" && document.title) || "",
+        (typeof document === "object" && document.title) || "Celo Carbon Credit",
 });
 
 const appInfo = {
-    appName: "Celo Composer",
+    appName: "Celo Carbon Credit",
 };
 
 const wagmiConfig = createConfig({
