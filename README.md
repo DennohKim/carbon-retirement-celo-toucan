@@ -92,74 +92,77 @@ First we dongrade the wagmi to version `0.12.xx`.
 
 ```
 
-Next we need to update connection configuration in the `_app.tsx` file:
+## Create ethers adapters using ethers v5 and viem
+
+Check new migration guides here - [Migration guides](https://wagmi.sh/react/ethers-adapters)
+
+### Create a provider
+
+Create a utils folder and create a new file named provider.ts
 
 ```typescript
-import "../styles/globals.css";
-import "@rainbow-me/rainbowkit/styles.css";
-import type { AppProps } from "next/app";
-import {
-  connectorsForWallets,
-  RainbowKitProvider,
-} from "@rainbow-me/rainbowkit";
-import {
-  metaMaskWallet,
-  omniWallet,
-  walletConnectWallet,
-} from "@rainbow-me/rainbowkit/wallets";
-import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 
-// Import known recommended wallets
-import { Valora, CeloWallet, CeloDance } from "@celo/rainbowkit-celo/wallets";
+import * as React from 'react'
+import { type PublicClient, usePublicClient } from 'wagmi'
+import { providers } from 'ethers'
+import { type HttpTransport } from 'viem'
 
-// Import CELO chain information
-import { Alfajores, Celo } from "@celo/rainbowkit-celo/chains";
-
-import Layout from "../components/Layout";
-
-const { chains, provider } = configureChains(
-  [Alfajores, Celo],
-  [
-    jsonRpcProvider({
-      rpc: (chain) => ({ http: chain.rpcUrls.default.http[0] }),
-    }),
-  ]
-);
-
-const connectors = connectorsForWallets([
-  {
-    groupName: "Recommended with CELO",
-    wallets: [
-      Valora({ chains }),
-      CeloWallet({ chains }),
-      CeloDance({ chains }),
-      metaMaskWallet({ chains }),
-      omniWallet({ chains }),
-      walletConnectWallet({ chains }),
-    ],
-  },
-]);
-
-const wagmiClient = createClient({
-  autoConnect: true,
-  connectors,
-  provider,
-});
-
-function App({ Component, pageProps }: AppProps) {
-  return (
-    <WagmiConfig client={wagmiClient}>
-      <RainbowKitProvider chains={chains} coolMode={true}>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </RainbowKitProvider>
-    </WagmiConfig>
-  );
+export function publicClientToProvider(publicClient: PublicClient) {
+  const { chain, transport } = publicClient
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  }
+  if (transport.type === 'fallback')
+    return new providers.FallbackProvider(
+      (transport.transports as ReturnType<HttpTransport>[]).map(
+        ({ value }) => new providers.JsonRpcProvider(value?.url, network),
+      ),
+    )
+  return new providers.JsonRpcProvider(transport.url, network)
 }
 
-export default App;
+/** Hook to convert a viem Public Client to an ethers.js Provider. */
+export function useEthersProvider({ chainId }: { chainId?: number } = {}) {
+  const publicClient = usePublicClient({ chainId })
+  return React.useMemo(() => publicClientToProvider(publicClient), [publicClient])
+}
+
+
+```
+
+### Create a signer
+
+Inside the utils folder, create a new file named signer.ts
+
+
+```typescript
+
+import * as React from 'react'
+import { type WalletClient, useWalletClient } from 'wagmi'
+import { providers } from 'ethers'
+
+export function walletClientToSigner(walletClient: WalletClient) {
+  const { account, chain, transport } = walletClient
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  }
+  const provider = new providers.Web3Provider(transport, network)
+  const signer = provider.getSigner(account.address)
+  return signer
+}
+
+/** Hook to convert a viem Wallet Client to an ethers.js Signer. */
+export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
+  const { data: walletClient } = useWalletClient({ chainId })
+  return React.useMemo(
+    () => (walletClient ? walletClientToSigner(walletClient) : undefined),
+    [walletClient],
+  )
+}
 ```
 
 ## Retire Carbon Credits
@@ -190,14 +193,15 @@ So in the index.ts file we will add the imports to the top:
 
 ```typescript
 import ToucanClient from "toucan-sdk";
-import { useProvider, useSigner } from "wagmi";
+import { useEthersProvider } from "@/utils/provider";
+import { useEthersSigner } from "@/utils/signer";
 ```
 
 And this part into our function body. You can set the signer and provider directly or at a later point. Here we want to first check if the signer is set, meaning if the user is connected to the application with their wallet.
 
 ```typescript
-const provider = useProvider();
-const { data: signer, isError, isLoading } = useSigner();
+const provider = useEthersProvider();
+const signer = useEthersSigner();
 
 const toucan = new ToucanClient("alfajores", provider);
 signer && toucan.setSigner(signer);
@@ -207,11 +211,13 @@ In the end our code should look like this:
 
 ```typescript
 import ToucanClient from "toucan-sdk";
-import { useProvider, useSigner } from "wagmi";
+import { useEthersProvider } from "@/utils/provider";
+import { useEthersSigner } from "@/utils/signer";
+
 
 export default function Home() {
-  const provider = useProvider();
-  const { data: signer, isError, isLoading } = useSigner();
+  const provider = useEthersProvider();
+  const signer = useEthersSigner();
 
   const toucan = new ToucanClient("alfajores", provider);
   signer && toucan.setSigner(signer);
@@ -251,11 +257,14 @@ Now let's put that code in a function and add a button to trigger it, so we can 
 import { parseEther } from "ethers/lib/utils.js";
 import ToucanClient from "toucan-sdk";
 import { useState } from "react";
-import { useProvider, useSigner } from "wagmi";
+import { useEthersProvider } from "@/utils/provider";
+import { useEthersSigner } from "@/utils/signer";
+
 
 export default function Home() {
-  const provider = useProvider();
-  const { data: signer, isError, isLoading } = useSigner();
+  const provider = useEthersProvider();
+  const signer = useEthersSigner();
+
   const toucan = new ToucanClient("alfajores", provider);
   signer && toucan.setSigner(signer);
 
@@ -303,11 +312,13 @@ Let's create a second function called retirePoolToken as well as a button for th
 import { parseEther } from "ethers/lib/utils.js";
 import { useState } from "react";
 import ToucanClient from "toucan-sdk";
-import { useProvider, useSigner } from "wagmi";
+import { useEthersProvider } from "@/utils/provider";
+import { useEthersSigner } from "@/utils/signer";
 
 export default function Home() {
-  const provider = useProvider();
-  const { data: signer, isError, isLoading } = useSigner();
+ const provider = useEthersProvider();
+  const signer = useEthersSigner();
+
   const toucan = new ToucanClient("alfajores", provider);
   signer && toucan.setSigner(signer);
   const [tco2address, setTco2address] = useState("");
