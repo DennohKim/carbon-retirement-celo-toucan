@@ -19,7 +19,7 @@ const connectors = celoGroups({
     chains,
     projectId,
     appName:
-        (typeof document === "object" && document.title) || "Your App Name",
+        (typeof document === "object" && document.title) || "",
 });
 
 const appInfo = {
