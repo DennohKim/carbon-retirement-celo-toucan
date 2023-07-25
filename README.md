@@ -75,24 +75,9 @@ yarn run dev
 
 ---
 
-## Downgrading wagmi in the Celo-Compose
-
-Celo-Composer has already been upgraded to wagmi 1.0.xx, but this won't work with Toucan SDK. So, we need to downgrade the wagmi vesion:
-
-First we dongrade the wagmi to version `0.12.xx`.
-
-```json
-...
-"dependencies": {
-    ...
-    "@celo/rainbowkit-celo": "^0.11.0",
-    "@rainbow-me/rainbowkit": "^0.12.2",
-    "wagmi": "^0.12.2"
-}
-
-```
-
 ## Create ethers adapters using ethers v5 and viem
+
+Toucan SDK uses etherjs library. Since celo composer upgraded to wagmi v1 which uses viem, we will have to create adapters for that.
 
 Check new migration guides here - [Migration guides](https://wagmi.sh/react/ethers-adapters)
 
