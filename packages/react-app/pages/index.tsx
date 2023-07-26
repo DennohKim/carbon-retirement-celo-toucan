@@ -7,8 +7,10 @@ import ToucanClient from "toucan-sdk";
 export default function Home() {
   const provider = useEthersProvider();
   const signer = useEthersSigner();
+  
   const toucan = new ToucanClient("alfajores", provider);
   signer && toucan.setSigner(signer);
+
   const [tco2address, setTco2address] = useState("");
 
   const redeemPoolToken = async (): Promise<void> => {
